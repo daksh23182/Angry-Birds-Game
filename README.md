@@ -1,33 +1,4 @@
-# Angry Birds
-
-A [libGDX](https://libgdx.com/) project generated with [gdx-liftoff](https://github.com/libgdx/gdx-liftoff).
-
-This project was generated with a template including simple application launchers and an `ApplicationAdapter` extension that draws libGDX logo.
-
-## Platforms
-
-- `core`: Main module with the application logic shared by all platforms.
-- `lwjgl3`: Primary desktop platform using LWJGL3; was called 'desktop' in older docs.
-
-## Gradle
-
-This project uses [Gradle](https://gradle.org/) to manage dependencies.
-The Gradle wrapper was included, so you can run Gradle tasks using `gradlew.bat` or `./gradlew` commands.
-Useful Gradle tasks and flags:
-
-- `--continue`: when using this flag, errors will not stop the tasks from running.
-- `--daemon`: thanks to this flag, Gradle daemon will be used to run chosen tasks.
-- `--offline`: when using this flag, cached dependency archives will be used.
-- `--refresh-dependencies`: this flag forces validation of all dependencies. Useful for snapshot versions.
-- `build`: builds sources and archives of every project.
-- `cleanEclipse`: removes Eclipse project data.
-- `cleanIdea`: removes IntelliJ project data.
-- `clean`: removes `build` folders, which store compiled classes and built archives.
-- `eclipse`: generates Eclipse project data.
-- `idea`: generates IntelliJ project data.
-- `lwjgl3:jar`: builds application's runnable jar, which can be found at `lwjgl3/build/libs`.
-- `lwjgl3:run`: starts the application.
-- `test`: runs unit tests (if any).
-
-Note that most tasks that are not specific to a single project can be run with `name:` prefix, where the `name` should be replaced with the ID of a specific project.
-For example, `core:clean` removes `build` folder only from the `core` project.
+When the game starts LoadingScreen1 appears for 5 seconds and after that the MainMenuScreen appears. MainMenuScreen has two buttons “START” and “EXIT”.
+If “EXIT” is clicked the game terminates and if “START” is clicked, it directs to the LevelSelectScreen where there are 3 levels out of which only Level1 is functional and rest are locked. When Level1 is clicked LoadingScreen2 appears for 2 sec which directs to the Playscreen where all our Birds(red,blue,yellow),materials(wood,glass,metal),Pigs(small,medium
+,big) and sling are present which are not functional as of now. At the top left of the screen there is a pause button which pauses the game. It has two options either to resume the game or exit the game which directs to the main menu. At the top right of the Playscreen there is a GameOver button which directs to the GameOverScreen and then to the LevelSelectScreen.
+The score section present on the top right of the PlayScreen is not functional.
