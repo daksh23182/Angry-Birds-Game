@@ -1,0 +1,203 @@
+<html>
+<head>
+<title>StartupHelper.java</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #7a7e85;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #5f826b; font-style: italic;}
+.s5 { color: #67a37c; font-style: italic;}
+.s6 { color: #68a67e; font-style: italic;}
+.s7 { color: #6aab73;}
+.s8 { color: #2aacb8;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+StartupHelper.java</font>
+</center></td></tr></table>
+<pre><span class="s0">/* 
+ * Copyright 2020 damios 
+ * 
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;); 
+ * you may not use this file except in compliance with the License. 
+ * You may obtain a copy of the License at: 
+ * https://www.apache.org/licenses/LICENSE-2.0 
+ * 
+ * Unless required by applicable law or agreed to in writing, software 
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS, 
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+ * See the License for the specific language governing permissions and 
+ * limitations under the License. 
+ */</span>
+<span class="s0">//Note, the above license and copyright applies to this file only.</span>
+
+<span class="s2">package </span><span class="s1">com</span><span class="s3">.</span><span class="s1">addy</span><span class="s3">.</span><span class="s1">AngryBird</span><span class="s3">.</span><span class="s1">lwjgl3</span><span class="s3">;</span>
+
+<span class="s2">import </span><span class="s1">org</span><span class="s3">.</span><span class="s1">lwjgl</span><span class="s3">.</span><span class="s1">system</span><span class="s3">.</span><span class="s1">macosx</span><span class="s3">.</span><span class="s1">LibC</span><span class="s3">;</span>
+
+<span class="s2">import </span><span class="s1">java</span><span class="s3">.</span><span class="s1">io</span><span class="s3">.</span><span class="s1">BufferedReader</span><span class="s3">;</span>
+<span class="s2">import </span><span class="s1">java</span><span class="s3">.</span><span class="s1">io</span><span class="s3">.</span><span class="s1">File</span><span class="s3">;</span>
+<span class="s2">import </span><span class="s1">java</span><span class="s3">.</span><span class="s1">io</span><span class="s3">.</span><span class="s1">InputStreamReader</span><span class="s3">;</span>
+<span class="s2">import </span><span class="s1">java</span><span class="s3">.</span><span class="s1">lang</span><span class="s3">.</span><span class="s1">management</span><span class="s3">.</span><span class="s1">ManagementFactory</span><span class="s3">;</span>
+<span class="s2">import </span><span class="s1">java</span><span class="s3">.</span><span class="s1">util</span><span class="s3">.</span><span class="s1">ArrayList</span><span class="s3">;</span>
+
+<span class="s4">/**</span>
+ <span class="s4">* Adds some utilities to ensure that the JVM was started with the</span>
+ <span class="s4">* {</span><span class="s5">@code </span><span class="s4">-XstartOnFirstThread} argument, which is required on macOS for LWJGL 3</span>
+ <span class="s4">* to function. Also helps on Windows when users have names with characters from</span>
+ <span class="s4">* outside the Latin alphabet, a common cause of startup crashes.</span>
+ <span class="s4">* </span><span class="s6">&lt;br&gt;</span>
+ <span class="s4">* </span><span class="s6">&lt;a href=&quot;https://jvm-gaming.org/t/starting-jvm-on-mac-with-xstartonfirstthread-programmatically/57547&quot;&gt;</span><span class="s4">Based on this java-gaming.org post by kappa</span><span class="s6">&lt;/a&gt;</span>
+ <span class="s4">* </span><span class="s5">@author </span><span class="s4">damios</span>
+ <span class="s4">*/</span>
+<span class="s2">public class </span><span class="s1">StartupHelper </span><span class="s3">{</span>
+
+    <span class="s2">private static final </span><span class="s1">String JVM_RESTARTED_ARG </span><span class="s3">= </span><span class="s7">&quot;jvmIsRestarted&quot;</span><span class="s3">;</span>
+
+    <span class="s2">private </span><span class="s1">StartupHelper</span><span class="s3">() {</span>
+        <span class="s2">throw new </span><span class="s1">UnsupportedOperationException</span><span class="s3">();</span>
+    <span class="s3">}</span>
+
+    <span class="s4">/**</span>
+     <span class="s4">* Starts a new JVM if the application was started on macOS without the</span>
+     <span class="s4">* {</span><span class="s5">@code </span><span class="s4">-XstartOnFirstThread} argument. This also includes some code for</span>
+     <span class="s4">* Windows, for the case where the user's home directory includes certain</span>
+     <span class="s4">* non-Latin-alphabet characters (without this code, most LWJGL3 apps fail</span>
+     <span class="s4">* immediately for those users). Returns whether a new JVM was started and</span>
+     <span class="s4">* thus no code should be executed.</span>
+     <span class="s4">* </span><span class="s6">&lt;p&gt;</span>
+     <span class="s4">* </span><span class="s6">&lt;u&gt;</span><span class="s4">Usage:</span><span class="s6">&lt;/u&gt;</span>
+     <span class="s4">*</span>
+     <span class="s4">* </span><span class="s6">&lt;pre&gt;&lt;code&gt;</span>
+     <span class="s4">* public static void main(String... args) {</span>
+     <span class="s4">* 	if (StartupHelper.startNewJvmIfRequired(true)) return; // This handles macOS support and helps on Windows.</span>
+     <span class="s4">* 	// after this is the actual main method code</span>
+     <span class="s4">* }</span>
+     <span class="s4">* </span><span class="s6">&lt;/code&gt;&lt;/pre&gt;</span>
+     <span class="s4">*</span>
+     <span class="s4">* </span><span class="s5">@param </span><span class="s4">redirectOutput</span>
+     <span class="s4">*            whether the output of the new JVM should be rerouted to the</span>
+     <span class="s4">*            old JVM, so it can be accessed in the same place; keeps the</span>
+     <span class="s4">*            old JVM running if enabled</span>
+     <span class="s4">* </span><span class="s5">@return </span><span class="s4">whether a new JVM was started and thus no code should be executed</span>
+     <span class="s4">*         in this one</span>
+     <span class="s4">*/</span>
+    <span class="s2">public static boolean </span><span class="s1">startNewJvmIfRequired</span><span class="s3">(</span><span class="s2">boolean </span><span class="s1">redirectOutput</span><span class="s3">) {</span>
+        <span class="s1">String osName </span><span class="s3">= </span><span class="s1">System</span><span class="s3">.</span><span class="s1">getProperty</span><span class="s3">(</span><span class="s7">&quot;os.name&quot;</span><span class="s3">).</span><span class="s1">toLowerCase</span><span class="s3">();</span>
+        <span class="s2">if </span><span class="s3">(!</span><span class="s1">osName</span><span class="s3">.</span><span class="s1">contains</span><span class="s3">(</span><span class="s7">&quot;mac&quot;</span><span class="s3">)) {</span>
+            <span class="s2">if </span><span class="s3">(</span><span class="s1">osName</span><span class="s3">.</span><span class="s1">contains</span><span class="s3">(</span><span class="s7">&quot;windows&quot;</span><span class="s3">)) {</span>
+<span class="s0">// Here, we are trying to work around an issue with how LWJGL3 loads its extracted .dll files.</span>
+<span class="s0">// By default, LWJGL3 extracts to the directory specified by &quot;java.io.tmpdir&quot;, which is usually the user's home.</span>
+<span class="s0">// If the user's name has non-ASCII (or some non-alphanumeric) characters in it, that would fail.</span>
+<span class="s0">// By extracting to the relevant &quot;ProgramData&quot; folder, which is usually &quot;C:\ProgramData&quot;, we avoid this.</span>
+                <span class="s1">System</span><span class="s3">.</span><span class="s1">setProperty</span><span class="s3">(</span><span class="s7">&quot;java.io.tmpdir&quot;</span><span class="s3">, </span><span class="s1">System</span><span class="s3">.</span><span class="s1">getenv</span><span class="s3">(</span><span class="s7">&quot;ProgramData&quot;</span><span class="s3">) + </span><span class="s7">&quot;/libGDX-temp&quot;</span><span class="s3">);</span>
+            <span class="s3">}</span>
+            <span class="s2">return false</span><span class="s3">;</span>
+        <span class="s3">}</span>
+
+        <span class="s0">// There is no need for -XstartOnFirstThread on Graal native image</span>
+        <span class="s2">if </span><span class="s3">(!</span><span class="s1">System</span><span class="s3">.</span><span class="s1">getProperty</span><span class="s3">(</span><span class="s7">&quot;org.graalvm.nativeimage.imagecode&quot;</span><span class="s3">, </span><span class="s7">&quot;&quot;</span><span class="s3">).</span><span class="s1">isEmpty</span><span class="s3">()) {</span>
+            <span class="s2">return false</span><span class="s3">;</span>
+        <span class="s3">}</span>
+
+        <span class="s2">long </span><span class="s1">pid </span><span class="s3">= </span><span class="s1">LibC</span><span class="s3">.</span><span class="s1">getpid</span><span class="s3">();</span>
+
+        <span class="s0">// check whether -XstartOnFirstThread is enabled</span>
+        <span class="s2">if </span><span class="s3">(</span><span class="s7">&quot;1&quot;</span><span class="s3">.</span><span class="s1">equals</span><span class="s3">(</span><span class="s1">System</span><span class="s3">.</span><span class="s1">getenv</span><span class="s3">(</span><span class="s7">&quot;JAVA_STARTED_ON_FIRST_THREAD_&quot; </span><span class="s3">+ </span><span class="s1">pid</span><span class="s3">))) {</span>
+            <span class="s2">return false</span><span class="s3">;</span>
+        <span class="s3">}</span>
+
+        <span class="s0">// check whether the JVM was previously restarted</span>
+        <span class="s0">// avoids looping, but most certainly leads to a crash</span>
+        <span class="s2">if </span><span class="s3">(</span><span class="s7">&quot;true&quot;</span><span class="s3">.</span><span class="s1">equals</span><span class="s3">(</span><span class="s1">System</span><span class="s3">.</span><span class="s1">getProperty</span><span class="s3">(</span><span class="s1">JVM_RESTARTED_ARG</span><span class="s3">))) {</span>
+            <span class="s1">System</span><span class="s3">.</span><span class="s1">err</span><span class="s3">.</span><span class="s1">println</span><span class="s3">(</span>
+                    <span class="s7">&quot;There was a problem evaluating whether the JVM was started with the -XstartOnFirstThread argument.&quot;</span><span class="s3">);</span>
+            <span class="s2">return false</span><span class="s3">;</span>
+        <span class="s3">}</span>
+
+        <span class="s0">// Restart the JVM with -XstartOnFirstThread</span>
+        <span class="s1">ArrayList</span><span class="s3">&lt;</span><span class="s1">String</span><span class="s3">&gt; </span><span class="s1">jvmArgs </span><span class="s3">= </span><span class="s2">new </span><span class="s1">ArrayList</span><span class="s3">&lt;&gt;();</span>
+        <span class="s1">String separator </span><span class="s3">= </span><span class="s1">System</span><span class="s3">.</span><span class="s1">getProperty</span><span class="s3">(</span><span class="s7">&quot;file.separator&quot;</span><span class="s3">);</span>
+        <span class="s0">// The following line is used assuming you target Java 8, the minimum for LWJGL3.</span>
+        <span class="s1">String javaExecPath </span><span class="s3">= </span><span class="s1">System</span><span class="s3">.</span><span class="s1">getProperty</span><span class="s3">(</span><span class="s7">&quot;java.home&quot;</span><span class="s3">) + </span><span class="s1">separator </span><span class="s3">+ </span><span class="s7">&quot;bin&quot; </span><span class="s3">+ </span><span class="s1">separator </span><span class="s3">+ </span><span class="s7">&quot;java&quot;</span><span class="s3">;</span>
+        <span class="s0">// If targeting Java 9 or higher, you could use the following instead of the above line:</span>
+        <span class="s0">//String javaExecPath = ProcessHandle.current().info().command().orElseThrow();</span>
+
+        <span class="s2">if </span><span class="s3">(!(</span><span class="s2">new </span><span class="s1">File</span><span class="s3">(</span><span class="s1">javaExecPath</span><span class="s3">)).</span><span class="s1">exists</span><span class="s3">()) {</span>
+            <span class="s1">System</span><span class="s3">.</span><span class="s1">err</span><span class="s3">.</span><span class="s1">println</span><span class="s3">(</span>
+                    <span class="s7">&quot;A Java installation could not be found. If you are distributing this app with a bundled JRE, be sure to set the -XstartOnFirstThread argument manually!&quot;</span><span class="s3">);</span>
+            <span class="s2">return false</span><span class="s3">;</span>
+        <span class="s3">}</span>
+
+        <span class="s1">jvmArgs</span><span class="s3">.</span><span class="s1">add</span><span class="s3">(</span><span class="s1">javaExecPath</span><span class="s3">);</span>
+        <span class="s1">jvmArgs</span><span class="s3">.</span><span class="s1">add</span><span class="s3">(</span><span class="s7">&quot;-XstartOnFirstThread&quot;</span><span class="s3">);</span>
+        <span class="s1">jvmArgs</span><span class="s3">.</span><span class="s1">add</span><span class="s3">(</span><span class="s7">&quot;-D&quot; </span><span class="s3">+ </span><span class="s1">JVM_RESTARTED_ARG </span><span class="s3">+ </span><span class="s7">&quot;=true&quot;</span><span class="s3">);</span>
+        <span class="s1">jvmArgs</span><span class="s3">.</span><span class="s1">addAll</span><span class="s3">(</span><span class="s1">ManagementFactory</span><span class="s3">.</span><span class="s1">getRuntimeMXBean</span><span class="s3">().</span><span class="s1">getInputArguments</span><span class="s3">());</span>
+        <span class="s1">jvmArgs</span><span class="s3">.</span><span class="s1">add</span><span class="s3">(</span><span class="s7">&quot;-cp&quot;</span><span class="s3">);</span>
+        <span class="s1">jvmArgs</span><span class="s3">.</span><span class="s1">add</span><span class="s3">(</span><span class="s1">System</span><span class="s3">.</span><span class="s1">getProperty</span><span class="s3">(</span><span class="s7">&quot;java.class.path&quot;</span><span class="s3">));</span>
+        <span class="s1">String mainClass </span><span class="s3">= </span><span class="s1">System</span><span class="s3">.</span><span class="s1">getenv</span><span class="s3">(</span><span class="s7">&quot;JAVA_MAIN_CLASS_&quot; </span><span class="s3">+ </span><span class="s1">pid</span><span class="s3">);</span>
+        <span class="s2">if </span><span class="s3">(</span><span class="s1">mainClass </span><span class="s3">== </span><span class="s2">null</span><span class="s3">) {</span>
+            <span class="s1">StackTraceElement</span><span class="s3">[] </span><span class="s1">trace </span><span class="s3">= </span><span class="s1">Thread</span><span class="s3">.</span><span class="s1">currentThread</span><span class="s3">().</span><span class="s1">getStackTrace</span><span class="s3">();</span>
+            <span class="s2">if </span><span class="s3">(</span><span class="s1">trace</span><span class="s3">.</span><span class="s1">length </span><span class="s3">&gt; </span><span class="s8">0</span><span class="s3">) {</span>
+                <span class="s1">mainClass </span><span class="s3">= </span><span class="s1">trace</span><span class="s3">[</span><span class="s1">trace</span><span class="s3">.</span><span class="s1">length </span><span class="s3">- </span><span class="s8">1</span><span class="s3">].</span><span class="s1">getClassName</span><span class="s3">();</span>
+            <span class="s3">} </span><span class="s2">else </span><span class="s3">{</span>
+                <span class="s1">System</span><span class="s3">.</span><span class="s1">err</span><span class="s3">.</span><span class="s1">println</span><span class="s3">(</span><span class="s7">&quot;The main class could not be determined.&quot;</span><span class="s3">);</span>
+                <span class="s2">return false</span><span class="s3">;</span>
+            <span class="s3">}</span>
+        <span class="s3">}</span>
+        <span class="s1">jvmArgs</span><span class="s3">.</span><span class="s1">add</span><span class="s3">(</span><span class="s1">mainClass</span><span class="s3">);</span>
+
+        <span class="s2">try </span><span class="s3">{</span>
+            <span class="s2">if </span><span class="s3">(!</span><span class="s1">redirectOutput</span><span class="s3">) {</span>
+                <span class="s1">ProcessBuilder processBuilder </span><span class="s3">= </span><span class="s2">new </span><span class="s1">ProcessBuilder</span><span class="s3">(</span><span class="s1">jvmArgs</span><span class="s3">);</span>
+                <span class="s1">processBuilder</span><span class="s3">.</span><span class="s1">start</span><span class="s3">();</span>
+            <span class="s3">} </span><span class="s2">else </span><span class="s3">{</span>
+                <span class="s1">Process process </span><span class="s3">= (</span><span class="s2">new </span><span class="s1">ProcessBuilder</span><span class="s3">(</span><span class="s1">jvmArgs</span><span class="s3">))</span>
+                        <span class="s3">.</span><span class="s1">redirectErrorStream</span><span class="s3">(</span><span class="s2">true</span><span class="s3">).</span><span class="s1">start</span><span class="s3">();</span>
+                <span class="s1">BufferedReader processOutput </span><span class="s3">= </span><span class="s2">new </span><span class="s1">BufferedReader</span><span class="s3">(</span>
+                        <span class="s2">new </span><span class="s1">InputStreamReader</span><span class="s3">(</span><span class="s1">process</span><span class="s3">.</span><span class="s1">getInputStream</span><span class="s3">()));</span>
+                <span class="s1">String line</span><span class="s3">;</span>
+
+                <span class="s2">while </span><span class="s3">((</span><span class="s1">line </span><span class="s3">= </span><span class="s1">processOutput</span><span class="s3">.</span><span class="s1">readLine</span><span class="s3">()) != </span><span class="s2">null</span><span class="s3">) {</span>
+                    <span class="s1">System</span><span class="s3">.</span><span class="s1">out</span><span class="s3">.</span><span class="s1">println</span><span class="s3">(</span><span class="s1">line</span><span class="s3">);</span>
+                <span class="s3">}</span>
+
+                <span class="s1">process</span><span class="s3">.</span><span class="s1">waitFor</span><span class="s3">();</span>
+            <span class="s3">}</span>
+        <span class="s3">} </span><span class="s2">catch </span><span class="s3">(</span><span class="s1">Exception e</span><span class="s3">) {</span>
+            <span class="s1">System</span><span class="s3">.</span><span class="s1">err</span><span class="s3">.</span><span class="s1">println</span><span class="s3">(</span><span class="s7">&quot;There was a problem restarting the JVM&quot;</span><span class="s3">);</span>
+            <span class="s1">e</span><span class="s3">.</span><span class="s1">printStackTrace</span><span class="s3">();</span>
+        <span class="s3">}</span>
+
+        <span class="s2">return true</span><span class="s3">;</span>
+    <span class="s3">}</span>
+
+    <span class="s4">/**</span>
+     <span class="s4">* Starts a new JVM if the application was started on macOS without the</span>
+     <span class="s4">* {</span><span class="s5">@code </span><span class="s4">-XstartOnFirstThread} argument. Returns whether a new JVM was</span>
+     <span class="s4">* started and thus no code should be executed. Redirects the output of the</span>
+     <span class="s4">* new JVM to the old one.</span>
+     <span class="s4">* </span><span class="s6">&lt;p&gt;</span>
+     <span class="s4">* </span><span class="s6">&lt;u&gt;</span><span class="s4">Usage:</span><span class="s6">&lt;/u&gt;</span>
+     <span class="s4">*</span>
+     <span class="s4">* </span><span class="s6">&lt;pre&gt;</span>
+     <span class="s4">* public static void main(String... args) {</span>
+     <span class="s4">* 	if (StartupHelper.startNewJvmIfRequired()) return; // This handles macOS support and helps on Windows.</span>
+     <span class="s4">* 	// the actual main method code</span>
+     <span class="s4">* }</span>
+     <span class="s4">* </span><span class="s6">&lt;/pre&gt;</span>
+     <span class="s4">*</span>
+     <span class="s4">* </span><span class="s5">@return </span><span class="s4">whether a new JVM was started and thus no code should be executed</span>
+     <span class="s4">*         in this one</span>
+     <span class="s4">*/</span>
+    <span class="s2">public static boolean </span><span class="s1">startNewJvmIfRequired</span><span class="s3">() {</span>
+        <span class="s2">return </span><span class="s1">startNewJvmIfRequired</span><span class="s3">(</span><span class="s2">true</span><span class="s3">);</span>
+    <span class="s3">}</span>
+<span class="s3">}</span></pre>
+</body>
+</html>

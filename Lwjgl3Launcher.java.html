@@ -1,0 +1,58 @@
+<html>
+<head>
+<title>Lwjgl3Launcher.java</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #5f826b; font-style: italic;}
+.s4 { color: #7a7e85;}
+.s5 { color: #6aab73;}
+.s6 { color: #2aacb8;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+Lwjgl3Launcher.java</font>
+</center></td></tr></table>
+<pre><span class="s0">package </span><span class="s1">com</span><span class="s2">.</span><span class="s1">addy</span><span class="s2">.</span><span class="s1">AngryBird</span><span class="s2">.</span><span class="s1">lwjgl3</span><span class="s2">;</span>
+
+<span class="s0">import </span><span class="s1">com</span><span class="s2">.</span><span class="s1">badlogic</span><span class="s2">.</span><span class="s1">gdx</span><span class="s2">.</span><span class="s1">backends</span><span class="s2">.</span><span class="s1">lwjgl3</span><span class="s2">.</span><span class="s1">Lwjgl3Application</span><span class="s2">;</span>
+<span class="s0">import </span><span class="s1">com</span><span class="s2">.</span><span class="s1">badlogic</span><span class="s2">.</span><span class="s1">gdx</span><span class="s2">.</span><span class="s1">backends</span><span class="s2">.</span><span class="s1">lwjgl3</span><span class="s2">.</span><span class="s1">Lwjgl3ApplicationConfiguration</span><span class="s2">;</span>
+<span class="s0">import </span><span class="s1">com</span><span class="s2">.</span><span class="s1">addy</span><span class="s2">.</span><span class="s1">AngryBird</span><span class="s2">.</span><span class="s1">AngryBird</span><span class="s2">;</span>
+
+<span class="s3">/** Launches the desktop (LWJGL3) application. */</span>
+<span class="s0">public class </span><span class="s1">Lwjgl3Launcher </span><span class="s2">{</span>
+    <span class="s0">public static void </span><span class="s1">main</span><span class="s2">(</span><span class="s1">String</span><span class="s2">[] </span><span class="s1">args</span><span class="s2">) {</span>
+        <span class="s0">if </span><span class="s2">(</span><span class="s1">StartupHelper</span><span class="s2">.</span><span class="s1">startNewJvmIfRequired</span><span class="s2">()) </span><span class="s0">return</span><span class="s2">; </span><span class="s4">// This handles macOS support and helps on Windows.</span>
+        <span class="s1">createApplication</span><span class="s2">();</span>
+    <span class="s2">}</span>
+
+    <span class="s0">private static </span><span class="s1">Lwjgl3Application createApplication</span><span class="s2">() {</span>
+        <span class="s0">return new </span><span class="s1">Lwjgl3Application</span><span class="s2">(</span><span class="s0">new </span><span class="s1">AngryBird</span><span class="s2">(), </span><span class="s1">getDefaultConfiguration</span><span class="s2">());</span>
+    <span class="s2">}</span>
+
+    <span class="s0">private static </span><span class="s1">Lwjgl3ApplicationConfiguration getDefaultConfiguration</span><span class="s2">() {</span>
+        <span class="s1">Lwjgl3ApplicationConfiguration configuration </span><span class="s2">= </span><span class="s0">new </span><span class="s1">Lwjgl3ApplicationConfiguration</span><span class="s2">();</span>
+        <span class="s1">configuration</span><span class="s2">.</span><span class="s1">setTitle</span><span class="s2">(</span><span class="s5">&quot;Angry Birds&quot;</span><span class="s2">);</span>
+        <span class="s4">//// Vsync limits the frames per second to what your hardware can display, and helps eliminate</span>
+        <span class="s4">//// screen tearing. This setting doesn't always work on Linux, so the line after is a safeguard.</span>
+        <span class="s1">configuration</span><span class="s2">.</span><span class="s1">useVsync</span><span class="s2">(</span><span class="s0">true</span><span class="s2">);</span>
+        <span class="s4">//// Limits FPS to the refresh rate of the currently active monitor, plus 1 to try to match fractional</span>
+        <span class="s4">//// refresh rates. The Vsync setting above should limit the actual FPS to match the monitor.</span>
+        <span class="s1">configuration</span><span class="s2">.</span><span class="s1">setForegroundFPS</span><span class="s2">(</span><span class="s1">Lwjgl3ApplicationConfiguration</span><span class="s2">.</span><span class="s1">getDisplayMode</span><span class="s2">().</span><span class="s1">refreshRate </span><span class="s2">+ </span><span class="s6">1</span><span class="s2">);</span>
+        <span class="s4">//// If you remove the above line and set Vsync to false, you can get unlimited FPS, which can be</span>
+        <span class="s4">//// useful for testing performance, but can also be very stressful to some hardware.</span>
+        <span class="s4">//// You may also need to configure GPU drivers to fully disable Vsync; this can cause screen tearing.</span>
+        <span class="s1">configuration</span><span class="s2">.</span><span class="s1">setWindowedMode</span><span class="s2">(</span><span class="s6">2400</span><span class="s2">, </span><span class="s6">1500</span><span class="s2">);</span>
+        <span class="s4">//// You can change these files; they are in lwjgl3/src/main/resources/ .</span>
+        <span class="s1">configuration</span><span class="s2">.</span><span class="s1">setWindowIcon</span><span class="s2">(</span><span class="s5">&quot;libgdx128.png&quot;</span><span class="s2">, </span><span class="s5">&quot;libgdx64.png&quot;</span><span class="s2">, </span><span class="s5">&quot;libgdx32.png&quot;</span><span class="s2">, </span><span class="s5">&quot;libgdx16.png&quot;</span><span class="s2">);</span>
+        <span class="s0">return </span><span class="s1">configuration</span><span class="s2">;</span>
+    <span class="s2">}</span>
+<span class="s2">}</span>
+</pre>
+</body>
+</html>
