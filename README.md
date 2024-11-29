@@ -1,4 +1,17 @@
-When the game starts LoadingScreen1 appears for 5 seconds and after that the MainMenuScreen appears. MainMenuScreen has two buttons “START” and “EXIT”.
-If “EXIT” is clicked the game terminates and if “START” is clicked, it directs to the LevelSelectScreen where there are 3 levels out of which only Level1 is functional and rest are locked. When Level1 is clicked LoadingScreen2 appears for 2 sec which directs to the Playscreen where all our Birds(red,blue,yellow),materials(wood,glass,metal),Pigs(small,medium
-,big) and sling are present which are not functional as of now. At the top left of the screen there is a pause button which pauses the game. It has two options either to resume the game or exit the game which directs to the main menu. At the top right of the Playscreen there is a GameOver button which directs to the GameOverScreen and then to the LevelSelectScreen.
-The score section present on the top right of the PlayScreen is not functional.
+
+
+The game starts with a LoadingScreen. It then directs to the MainMenuScreen which have a START and a EXIT button. When clicked on START LevelSelectScreen is set which have 3 levels. Each level consists of different bird queue and different types of pigs and Materials. 
+
+We have RedBird (with no special ability) , BlueBird (which enlarges in size) and YellowBird (which speeds up). They have health of 100,150 and 200 respectively.
+
+We have 3 types of pig i.e. Smallpig , MediumPig and BigPig with healths of 100,150 and 200 respectively.
+
+we have 3 types of material i.e Wood,Glass and Metal with health of 100,150 and 200 respectively.
+
+The pauseButton on PlayScreen has two options either to Restart or to return to MainMenu. Below the PauseButton there is a  SaveButton which saves the current state of the game and make a file in the folder. Then when we click on Level1 again it ask wheather to play the previously Loaded game or start a new One.
+
+When Bird is launched, and when it collides with a pig or a material, The health of Pig or material is decreased by the health the bird possess. If a bird has health 100 and it collides with pig of health 150 , bird dies and health of pig remains 50. And if bird health is 200 and pig health is 150. The pig dies and after killing the big the bird moves towards other obstacles with its remaining health i.e.50 
+
+
+--------BUGS---------
+When the bird queue is exhausted, instead of a defeat screen the program terminates due to NULLPOINTEXCEPTION. Tried a lot to fix it but couldnt succeed.
