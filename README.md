@@ -13,5 +13,3 @@ The pauseButton on PlayScreen has two options either to Restart or to return to 
 When Bird is launched, and when it collides with a pig or a material, The health of Pig or material is decreased by the health the bird possess. If a bird has health 100 and it collides with pig of health 150 , bird dies and health of pig remains 50. And if bird health is 200 and pig health is 150. The pig dies and after killing the big the bird moves towards other obstacles with its remaining health i.e.50 
 
 
---------BUGS---------
-When the bird queue is exhausted, instead of a defeat screen the program terminates due to NULLPOINTEXCEPTION. Tried a lot to fix it but couldnt succeed.
